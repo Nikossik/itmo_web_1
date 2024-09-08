@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css"> <!-- Подключаем файл стилей -->
+    <title>Point Checker</title>
+</head>
+<body>
+    <header>
+        <h1>Point Checker Application</h1>
+        <p>Student Name: Иванов Иван Иванович, Group: 123456, Variant: 7</p>
+    </header>
+
+    <form id="pointForm">
+        <label for="x">X Coordinate (-3 to 5):</label>
+        <input type="text" id="x" name="x" required><br><br>
+
+        <label for="y">Y Coordinate:</label>
+        <input type="checkbox" name="y" value="-2"> -2
+        <input type="checkbox" name="y" value="-1.5"> -1.5
+        <input type="checkbox" name="y" value="-1"> -1
+        <input type="checkbox" name="y" value="-0.5"> -0.5
+        <input type="checkbox" name="y" value="0"> 0
+        <input type="checkbox" name="y" value="0.5"> 0.5
+        <input type="checkbox" name="y" value="1"> 1
+        <input type="checkbox" name="y" value="1.5"> 1.5
+        <input type="checkbox" name="y" value="2"> 2<br><br>
+
+        <label for="r">R:</label>
+        <select id="r" name="r" onchange="drawGraph()">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select><br><br>
+
+        <button type="submit">Check Point</button>
+    </form>
+
+    <!-- Контейнер для отображения результата -->
+    <div id="result"></div>
+
+    <!-- Элемент canvas для графика -->
+    <canvas id="graphCanvas" width="400" height="400"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -46,7 +46,20 @@
             <button type="submit">Check Point</button>
         </form>
 
-        <div id="result"></div>
+        <table id="resultTable" border="1">
+            <thead>
+                <tr>
+                    <th>X</th>
+                    <th>Y</th>
+                    <th>R</th>
+                    <th>Result</th>
+                    <th>Current Time</th>
+                    <th>Script Execution Time</th>
+                </tr>
+            </thead>
+            <tbody id="resultBody">
+            </tbody>
+        </table>
 
         <canvas id="graphCanvas" width="800" height="800"></canvas>
     </main>

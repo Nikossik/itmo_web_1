@@ -18,7 +18,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("web.Main")
+    mainClass.set("web.FastCGIServer")
 }
 
 tasks.test {
@@ -32,7 +32,7 @@ tasks.shadowJar {
 
     manifest {
         attributes(
-            "Main-Class" to "web.Main"
+            "Main-Class" to "web.FastCGIServer"
         )
     }
 }

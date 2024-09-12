@@ -4,7 +4,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group = "web"
+group = "webserver"
 version = "1.0"
 
 repositories {
@@ -12,13 +12,14 @@ repositories {
 }
 
 dependencies {
+    implementation("org.json:json:20231013")
     implementation(files("libs/fastcgi-lib.jar"))
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 application {
-    mainClass.set("web.FastCGIServer")
+    mainClass.set("webserver.Main")
 }
 
 tasks.test {
@@ -32,7 +33,7 @@ tasks.shadowJar {
 
     manifest {
         attributes(
-            "Main-Class" to "web.FastCGIServer"
+            "Main-Class" to "webserver.Main"
         )
     }
 }

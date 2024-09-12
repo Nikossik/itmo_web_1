@@ -1,7 +1,17 @@
-function sendData() {
-    var x = document.getElementById("x").value;
-    var yElement = document.querySelector('input[name="y"]:checked');
-    var r = document.getElementById("r").value;
+document.querySelectorAll("input[name='y']").forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+        document.querySelectorAll("input[name='y']").forEach(cb => {
+            if (cb !== this) cb.checked = false;
+        });
+    });
+});
+
+document.getElementById('pointForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const x = document.getElementById('x').value;
+    const yElements = document.querySelectorAll('input[name="y"]:checked'); 
+    const r = document.getElementById('r').value;
 
     if (!/^-?\d+(\.\d+)?$/.test(x) || x < -3 || x > 5) {
         alert("Please enter a valid X coordinate between -3 and 5.");
@@ -9,68 +19,61 @@ function sendData() {
         return;
     }
 
-    if (!yElement) {
+    if (yElements.length === 0) {
         alert("Please select a Y value.");
         console.warn("No Y value selected.");
         return;
     }
 
-    var y = yElement.value;
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://helios.cs.ifmo.ru:24985/fcgi-bin/server.jar", true);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    const y = Array.from(yElements).map(el => el.value);
 
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var jsonResponse = JSON.parse(xhr.responseText);
-
-
-            var resultBody = document.getElementById("resultBody");
-            var newRow = document.createElement("tr");
-            newRow.innerHTML = `
-                <td>${jsonResponse.x}</td>
-                <td>${jsonResponse.y}</td>
-                <td>${jsonResponse.r}</td>
-                <td>${jsonResponse.result}</td>
-                <td>${jsonResponse.currentTime}</td>
-                <td>${jsonResponse.executionTime}</td>
-            `;
-            resultBody.appendChild(newRow);
-
-            drawGraph();
-            drawPoints(x, [y], r);
-        } else if (xhr.readyState == 4) {
-            console.error("Error:", xhr.statusText);
-        }
+    if (y.length !== 1) {
+        alert('Please select exactly one Y coordinate.');
+        return;
+    }
+    
+    const data = {
+        x: x,
+        y: y[0], 
+        r: r
     };
 
 
-    xhr.send("x=" + encodeURIComponent(x) + "&y=" + encodeURIComponent(y) + "&r=" + encodeURIComponent(r));
-}
+    fetch('/fcgi-bin/server.jar', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        const resultBody = document.getElementById('resultBody');
+        const newRow = document.createElement('tr');
 
+        newRow.innerHTML = `
+            <td>${result.x}</td>
+            <td>${result.y}</td>
+            <td>${result.r}</td>
+            <td>${result.result}</td>
+            <td>${result.currentTime}</td>
+            <td>${result.executionTime}</td>
+        `;
 
-document.getElementById("pointForm").addEventListener("submit", function(event) {
-    event.preventDefault();
-    sendData();
+        resultBody.appendChild(newRow);
+    })
+    .catch(error => console.error('Error:', error));
 });
 
 
-document.querySelectorAll("input[name='y']").forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        document.querySelectorAll("input[name='y']").forEach(cb => {
-            if (cb !== this) cb.checked = false;
-        });
-    });
-});
-
-document.getElementById("r").addEventListener("change", drawGraph); 
+document.getElementById("r").addEventListener("change", drawGraph);
 
 function drawGraph() {
-    let r = document.getElementById("r").value;
-    let canvas = document.getElementById("graphCanvas");
-    let context = canvas.getContext("2d");
+    const r = document.getElementById("r").value;
+    const canvas = document.getElementById("graphCanvas");
+    const context = canvas.getContext("2d");
 
-    context.clearRect(0, 0, canvas.width, canvas.height); 
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
     context.fillStyle = "#f0f0f0";
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -86,22 +89,35 @@ function drawGraph() {
     context.fillStyle = "blue";
     context.globalAlpha = 0.5;
 
-    let scale = 80; 
+    const scale = 80;
 
-    // rectangle
     context.fillRect(canvas.width / 2 - scale * r, canvas.height / 2 - scale * r, scale * r, scale * r);
 
-    // quarter circle
     context.beginPath();
     context.moveTo(canvas.width / 2, canvas.height / 2);
     context.arc(canvas.width / 2, canvas.height / 2, scale * r / 2, 1.5 * Math.PI, 2 * Math.PI, false);
     context.fill();
 
-    //triangle
     context.beginPath();
     context.moveTo(canvas.width / 2, canvas.height / 2);
     context.lineTo(canvas.width / 2 + scale * r, canvas.height / 2);
     context.lineTo(canvas.width / 2, canvas.height / 2 + scale * r);
+    context.fill();
+}
+
+function drawPoints(x, y, r) {
+    const canvas = document.getElementById("graphCanvas");
+    const context = canvas.getContext("2d");
+    const scale = 80;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const pointX = centerX + x * scale;
+    const pointY = centerY - y * scale;
+
+    context.fillStyle = "red";
+    context.beginPath();
+    context.arc(pointX, pointY, 3, 0, 2 * Math.PI);
     context.fill();
 }
 

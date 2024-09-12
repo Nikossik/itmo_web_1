@@ -1,73 +1,4 @@
-document.querySelectorAll("input[name='y']").forEach(checkbox => {
-    checkbox.addEventListener('change', function () {
-        document.querySelectorAll("input[name='y']").forEach(cb => {
-            if (cb !== this) cb.checked = false;
-        });
-    });
-});
-
-document.getElementById('pointForm').addEventListener('submit', function (event) {
-    event.preventDefault();
-
-    const x = document.getElementById('x').value;
-    const yElements = document.querySelectorAll('input[name="y"]:checked'); 
-    const r = document.getElementById('r').value;
-
-    if (!/^-?\d+(\.\d+)?$/.test(x) || x < -3 || x > 5) {
-        alert("Please enter a valid X coordinate between -3 and 5.");
-        console.warn("Invalid X value:", x);
-        return;
-    }
-
-    if (yElements.length === 0) {
-        alert("Please select a Y value.");
-        console.warn("No Y value selected.");
-        return;
-    }
-
-    const y = Array.from(yElements).map(el => el.value);
-
-    if (y.length !== 1) {
-        alert('Please select exactly one Y coordinate.');
-        return;
-    }
-    
-    const data = {
-        x: x,
-        y: y[0], 
-        r: r
-    };
-
-
-    fetch('/fcgi-bin/server.jar', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        const resultBody = document.getElementById('resultBody');
-        const newRow = document.createElement('tr');
-
-        newRow.innerHTML = `
-            <td>${result.x}</td>
-            <td>${result.y}</td>
-            <td>${result.r}</td>
-            <td>${result.result}</td>
-            <td>${result.currentTime}</td>
-            <td>${result.executionTime}</td>
-        `;
-
-        resultBody.appendChild(newRow);
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-
 document.getElementById("r").addEventListener("change", drawGraph);
-
 function drawGraph() {
     const r = document.getElementById("r").value;
     const canvas = document.getElementById("graphCanvas");
@@ -104,7 +35,6 @@ function drawGraph() {
     context.lineTo(canvas.width / 2, canvas.height / 2 + scale * r);
     context.fill();
 }
-
 function drawPoints(x, y, r) {
     const canvas = document.getElementById("graphCanvas");
     const context = canvas.getContext("2d");
@@ -120,5 +50,68 @@ function drawPoints(x, y, r) {
     context.arc(pointX, pointY, 3, 0, 2 * Math.PI);
     context.fill();
 }
-
 drawGraph();
+drawPoints();
+
+
+document.querySelectorAll("input[name='y']").forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+        document.querySelectorAll("input[name='y']").forEach(cb => {
+            if (cb !== this) cb.checked = false;
+        });
+    });
+});
+
+document.getElementById('pointForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const x = document.getElementById('x').value;
+    const yElements = document.querySelectorAll('input[name="y"]:checked'); 
+    const r = document.getElementById('r').value;
+
+    if (!/^-?\d+(\.\d+)?$/.test(x) || x < -3 || x > 5) {
+        alert("Please enter a valid X coordinate between -3 and 5.");
+        console.warn("Invalid X value:", x);
+        return;
+    }
+
+    if (yElements.length === 0) {
+        alert("Please select a Y value.");
+        console.warn("No Y value selected.");
+        return;
+    }
+
+    const y = Array.from(yElements).map(el => el.value);
+
+    if (y.length !== 1) {
+        alert('Please select exactly one Y coordinate.');
+        return;
+    }
+    
+    const data = `x=${encodeURIComponent(x)}&y=${encodeURIComponent(y[0])}&r=${encodeURIComponent(r)}`;
+
+    fetch('/fcgi-bin/server.jar', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: data
+    })
+    .then(response => response.json())
+    .then(result => {
+        const resultBody = document.getElementById('resultBody');
+        const newRow = document.createElement('tr');
+
+        newRow.innerHTML = `
+            <td>${x}</td>
+            <td>${y}</td>
+            <td>${r}</td>
+            <td>${result.result !== undefined ? (result.result ? 'true' : 'false') : 'undefined'}</td>
+            <td>${result.currentTime !== undefined ? result.currentTime : 'undefined'}</td>
+            <td>${result.executionTime !== undefined ? result.executionTime : 'undefined'}</td>
+        `;
+
+        resultBody.appendChild(newRow);
+    })
+    .catch(error => console.error('Error:', error));
+});

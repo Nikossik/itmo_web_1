@@ -1,84 +1,96 @@
 package webserver;
 
 import com.fastcgi.FCGIInterface;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class Main {
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
     private static final String RESPONSE_TEMPLATE = "Content-Type: application/json\nContent-Length: %d\n\n%s";
 
+    static {
+        try {
+            String logFilePath = "/home/studs/s408490/httpd-root/fcgi-bin/server.log";
+            FileHandler fileHandler = new FileHandler(logFilePath, true);
+            fileHandler.setFormatter(new SimpleFormatter());
+            logger.addHandler(fileHandler);
+            logger.setUseParentHandlers(false);
+        } catch (Exception e) {
+            logger.info("Failed to initialize log handler: " + e.getMessage());
+        }
+    }
+
     public static void main(String[] args) {
-        System.out.println("Starting FastCGI server...");
-
-        while (new FCGIInterface().FCGIaccept() >= 0) {
+        FCGIInterface fcgi = new FCGIInterface();
+        while (fcgi.FCGIaccept() >= 0) {
+            long startTime = System.currentTimeMillis();
             try {
-                System.out.println("Incoming request accepted.");
+                logger.info("Incoming request accepted.");
 
-                BufferedReader reader = new BufferedReader(new InputStreamReader(FCGIInterface.request.inStream, StandardCharsets.UTF_8));
-                StringBuilder requestBody = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    requestBody.append(line);
-                }
+                String queryString = FCGIInterface.request.params.getProperty("QUERY_STRING");
+                logger.info("Received query string: " + queryString);
 
-                String body = requestBody.toString();
-                System.out.println("Received request body: " + body);
-
-                if (body.isEmpty()) {
-                    System.out.println("Request body is empty.");
+                if (queryString == null || queryString.trim().isEmpty()) {
+                    logger.warning("QUERY_STRING is empty.");
                     sendJson("{\"error\": \"missing query parameters\"}");
                     continue;
                 }
 
+                HashMap<String, String> params = Parameters.parse(queryString);
+                logger.info("Parsed parameters: " + params.toString());
 
-                JSONObject jsonParams = new JSONObject(body);
-                System.out.println("Parsed JSON parameters: " + jsonParams.toString());
-
-                if (!jsonParams.has("x") || !jsonParams.has("y") || !jsonParams.has("r")) {
-                    System.out.println("Missing parameter(s): x, y, or r is null");
+                if (params.get("x") == null || params.get("y") == null || params.get("r") == null) {
+                    logger.warning("Missing parameter(s): x, y, or r is null");
                     sendJson("{\"error\": \"missed necessary query param\"}");
                     continue;
                 }
 
-                int x = jsonParams.getInt("x");
-                float y = jsonParams.getFloat("y");
-                float r = jsonParams.getFloat("r");
+                int x = Integer.parseInt(params.get("x"));
+                float y = Float.parseFloat(params.get("y"));
+                float r = Float.parseFloat(params.get("r"));
 
-                System.out.printf("Parsed values - x: %d, y: %.2f, r: %.2f%n", x, y, r);
+                logger.info(String.format("Parsed values - x: %d, y: %.2f, r: %.2f", x, y, r));
 
                 boolean validX = Validator.validateX(x);
                 boolean validY = Validator.validateY(y);
                 boolean validR = Validator.validateR(r);
 
-                System.out.printf("Validation results - x: %b, y: %b, r: %b%n", validX, validY, validR);
+                logger.info(String.format("Validation results - x: %b, y: %b, r: %b", validX, validY, validR));
 
                 if (validX && validY && validR) {
                     boolean isInside = Checker.hit(x, y, r);
-                    System.out.println("Point inside check result: " + isInside);
-                    String jsonResponse = String.format("{\"x\": %d, \"y\": %.2f, \"r\": %.2f, \"result\": %b}", x, y, r, isInside);
+                    logger.info("Point inside check result: " + isInside);
+
+                    long endTime = System.currentTimeMillis();
+                    String executionTime = (endTime - startTime) + "ms";
+
+                    String jsonResponse = String.format(
+                            "{\"result\": %b, \"currentTime\": \"%s\", \"executionTime\": \"%s\"}",
+                            isInside, java.time.LocalDateTime.now(), executionTime
+                    );
                     sendJson(jsonResponse);
                 } else {
-                    System.out.println("Invalid data detected during validation.");
+                    logger.warning("Invalid data detected during validation.");
                     sendJson("{\"error\": \"invalid data\"}");
                 }
             } catch (NumberFormatException e) {
-                System.out.println("NumberFormatException: " + e.getMessage());
+                logger.warning("NumberFormatException: " + e.getMessage());
                 sendJson("{\"error\": \"wrong query param type\"}");
             } catch (NullPointerException e) {
-                System.out.println("NullPointerException: " + e.getMessage());
+                logger.warning("NullPointerException: " + e.getMessage());
                 sendJson("{\"error\": \"missed necessary query param\"}");
             } catch (Exception e) {
-                System.out.println("Unexpected exception: " + e.toString());
+                logger.severe("Unexpected exception: " + e.toString());
                 sendJson(String.format("{\"error\": \"%s\"}", e.toString()));
             }
         }
     }
 
     private static void sendJson(String jsonDump) {
-        System.out.println("Sending JSON response: " + jsonDump);
+        logger.info("Sending JSON response: " + jsonDump);
         System.out.printf((RESPONSE_TEMPLATE) + "%n", jsonDump.getBytes(StandardCharsets.UTF_8).length, jsonDump);
     }
 }

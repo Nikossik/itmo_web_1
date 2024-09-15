@@ -1,0 +1,2 @@
+Sep 12, 2024 5:35:06 PM webserver.Main sendJson
+INFO: Sending JSON response: {"error": "missed necessary query param"}

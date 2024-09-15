@@ -1,6 +1,9 @@
 package webserver;
 
 import com.fastcgi.FCGIInterface;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.logging.FileHandler;
@@ -13,13 +16,11 @@ public class Main {
 
     static {
         try {
-            String logFilePath = "/home/studs/s408490/httpd-root/fcgi-bin/server.log";
-            FileHandler fileHandler = new FileHandler(logFilePath, true);
-            fileHandler.setFormatter(new SimpleFormatter());
-            logger.addHandler(fileHandler);
-            logger.setUseParentHandlers(false);
+            FileHandler fh = new FileHandler("/home/studs/s408490/httpd-root/fcgi-bin/server.log", true);
+            fh.setFormatter(new SimpleFormatter());
+            logger.addHandler(fh);
         } catch (Exception e) {
-            logger.info("Failed to initialize log handler: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -28,22 +29,12 @@ public class Main {
         while (fcgi.FCGIaccept() >= 0) {
             long startTime = System.currentTimeMillis();
             try {
-                logger.info("Incoming request accepted.");
+                String body = readRequestBody();
+                logger.info("Received request body: " + body);
 
-                String queryString = FCGIInterface.request.params.getProperty("QUERY_STRING");
-                logger.info("Received query string: " + queryString);
+                HashMap<String, String> params = Parameters.parse(body);
 
-                if (queryString == null || queryString.trim().isEmpty()) {
-                    logger.warning("QUERY_STRING is empty.");
-                    sendJson("{\"error\": \"missing query parameters\"}");
-                    continue;
-                }
-
-                HashMap<String, String> params = Parameters.parse(queryString);
-                logger.info("Parsed parameters: " + params.toString());
-
-                if (params.get("x") == null || params.get("y") == null || params.get("r") == null) {
-                    logger.warning("Missing parameter(s): x, y, or r is null");
+                if (!params.containsKey("x") || !params.containsKey("y") || !params.containsKey("r")) {
                     sendJson("{\"error\": \"missed necessary query param\"}");
                     continue;
                 }
@@ -52,38 +43,17 @@ public class Main {
                 float y = Float.parseFloat(params.get("y"));
                 float r = Float.parseFloat(params.get("r"));
 
-                logger.info(String.format("Parsed values - x: %d, y: %.2f, r: %.2f", x, y, r));
-
-                boolean validX = Validator.validateX(x);
-                boolean validY = Validator.validateY(y);
-                boolean validR = Validator.validateR(r);
-
-                logger.info(String.format("Validation results - x: %b, y: %b, r: %b", validX, validY, validR));
-
-                if (validX && validY && validR) {
+                if (Validator.validateX(x) && Validator.validateY(y) && Validator.validateR(r)) {
                     boolean isInside = Checker.hit(x, y, r);
-                    logger.info("Point inside check result: " + isInside);
-
                     long endTime = System.currentTimeMillis();
-                    String executionTime = (endTime - startTime) + "ms";
-
-                    String jsonResponse = String.format(
-                            "{\"result\": %b, \"currentTime\": \"%s\", \"executionTime\": \"%s\"}",
-                            isInside, java.time.LocalDateTime.now(), executionTime
-                    );
-                    sendJson(jsonResponse);
+                    sendJson(String.format(
+                            "{\"result\": %b, \"currentTime\": \"%s\", \"executionTime\": \"%dms\"}",
+                            isInside, java.time.LocalDateTime.now(), (endTime - startTime)
+                    ));
                 } else {
-                    logger.warning("Invalid data detected during validation.");
                     sendJson("{\"error\": \"invalid data\"}");
                 }
-            } catch (NumberFormatException e) {
-                logger.warning("NumberFormatException: " + e.getMessage());
-                sendJson("{\"error\": \"wrong query param type\"}");
-            } catch (NullPointerException e) {
-                logger.warning("NullPointerException: " + e.getMessage());
-                sendJson("{\"error\": \"missed necessary query param\"}");
             } catch (Exception e) {
-                logger.severe("Unexpected exception: " + e.toString());
                 sendJson(String.format("{\"error\": \"%s\"}", e.toString()));
             }
         }
@@ -91,6 +61,17 @@ public class Main {
 
     private static void sendJson(String jsonDump) {
         logger.info("Sending JSON response: " + jsonDump);
-        System.out.printf((RESPONSE_TEMPLATE) + "%n", jsonDump.getBytes(StandardCharsets.UTF_8).length, jsonDump);
+        System.out.printf(RESPONSE_TEMPLATE + "%n", jsonDump.getBytes(StandardCharsets.UTF_8).length, jsonDump);
+    }
+
+    private static String readRequestBody() throws IOException {
+        FCGIInterface.request.inStream.fill();
+        int contentLength = FCGIInterface.request.inStream.available();
+        var buffer = ByteBuffer.allocate(contentLength);
+        var readBytes = FCGIInterface.request.inStream.read(buffer.array(), 0, contentLength);
+        var requestBodyRaw = new byte[readBytes];
+        buffer.get(requestBodyRaw);
+        buffer.clear();
+        return new String(requestBodyRaw, StandardCharsets.UTF_8);
     }
 }

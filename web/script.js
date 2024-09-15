@@ -1,59 +1,3 @@
-document.getElementById("r").addEventListener("change", drawGraph);
-function drawGraph() {
-    const r = document.getElementById("r").value;
-    const canvas = document.getElementById("graphCanvas");
-    const context = canvas.getContext("2d");
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    context.fillStyle = "#f0f0f0";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.strokeStyle = "black";
-    context.beginPath();
-
-    context.moveTo(canvas.width / 2, 0);
-    context.lineTo(canvas.width / 2, canvas.height);
-    context.moveTo(0, canvas.height / 2);
-    context.lineTo(canvas.width, canvas.height / 2);
-    context.stroke();
-
-    context.fillStyle = "blue";
-    context.globalAlpha = 0.5;
-
-    const scale = 80;
-
-    context.fillRect(canvas.width / 2 - scale * r, canvas.height / 2 - scale * r, scale * r, scale * r);
-
-    context.beginPath();
-    context.moveTo(canvas.width / 2, canvas.height / 2);
-    context.arc(canvas.width / 2, canvas.height / 2, scale * r / 2, 1.5 * Math.PI, 2 * Math.PI, false);
-    context.fill();
-
-    context.beginPath();
-    context.moveTo(canvas.width / 2, canvas.height / 2);
-    context.lineTo(canvas.width / 2 + scale * r, canvas.height / 2);
-    context.lineTo(canvas.width / 2, canvas.height / 2 + scale * r);
-    context.fill();
-}
-function drawPoints(x, y, r) {
-    const canvas = document.getElementById("graphCanvas");
-    const context = canvas.getContext("2d");
-    const scale = 80;
-
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const pointX = centerX + x * scale;
-    const pointY = centerY - y * scale;
-
-    context.fillStyle = "red";
-    context.beginPath();
-    context.arc(pointX, pointY, 3, 0, 2 * Math.PI);
-    context.fill();
-}
-drawGraph();
-drawPoints();
-
-
 document.querySelectorAll("input[name='y']").forEach(checkbox => {
     checkbox.addEventListener('change', function () {
         document.querySelectorAll("input[name='y']").forEach(cb => {
@@ -112,6 +56,97 @@ document.getElementById('pointForm').addEventListener('submit', function (event)
         `;
 
         resultBody.appendChild(newRow);
+
+        drawPoints(x, y[0], r); // Отображение точки на графике
+
     })
     .catch(error => console.error('Error:', error));
 });
+
+document.getElementById("r").addEventListener("change", drawGraph);
+
+function drawGraph() {
+    const r = document.getElementById("r").value;
+    const canvas = document.getElementById("graphCanvas");
+    const context = canvas.getContext("2d");
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background
+    context.fillStyle = "#f0f0f0";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Axis
+    context.strokeStyle = "black";
+    context.beginPath();
+    context.moveTo(canvas.width / 2, 0);
+    context.lineTo(canvas.width / 2, canvas.height);
+    context.moveTo(0, canvas.height / 2);
+    context.lineTo(canvas.width, canvas.height / 2);
+    context.stroke();
+
+
+    const scale = 80; 
+
+    context.fillStyle = "black";
+    context.font = "12px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+
+    const halfScale = scale / 2;
+    const offset = canvas.width / 2;
+
+    // X
+    context.fillText("-R", offset - scale, offset + 10);
+    context.fillText("-R/2", offset - halfScale, offset + 10);
+    context.fillText("R/2", offset + halfScale, offset + 10);
+    context.fillText("R", offset + scale, offset + 10);
+    context.fillText("x", canvas.width - 10, offset - 10);
+
+    // Y
+    context.fillText("-R", offset - 15, offset + scale);
+    context.fillText("-R/2", offset - 15, offset + halfScale);
+    context.fillText("R/2", offset - 15, offset - halfScale);
+    context.fillText("R", offset - 15, offset - scale);
+    context.fillText("y", offset + 10, 10);
+
+    context.fillStyle = "blue";
+    context.globalAlpha = 0.5;
+
+    // Rectangle
+    context.fillRect(offset - scale, offset - scale, scale, scale);
+
+    // Circle
+    context.beginPath();
+    context.moveTo(offset, offset);
+    context.arc(offset, offset, halfScale, 1.5 * Math.PI, 2 * Math.PI, false);
+    context.fill();
+
+    // Triangle
+    context.beginPath();
+    context.moveTo(offset, offset);
+    context.lineTo(offset + scale, offset);
+    context.lineTo(offset, offset + scale);
+    context.fill();
+
+    
+    context.globalAlpha = 1.0;
+}
+
+function drawPoints(x, y, r) {
+    const canvas = document.getElementById("graphCanvas");
+    const context = canvas.getContext("2d");
+    const scale = 80;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const pointX = centerX + x * scale;
+    const pointY = centerY - y * scale;
+
+    context.fillStyle = "red";
+    context.beginPath();
+    context.arc(pointX, pointY, 3, 0, 2 * Math.PI);
+    context.fill();
+}
+
+drawGraph();

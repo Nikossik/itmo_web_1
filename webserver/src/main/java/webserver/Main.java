@@ -39,7 +39,7 @@ public class Main {
                     continue;
                 }
 
-                int x = Integer.parseInt(params.get("x"));
+                float x = Float.parseFloat(params.get("x"));
                 float y = Float.parseFloat(params.get("y"));
                 float r = Float.parseFloat(params.get("r"));
 

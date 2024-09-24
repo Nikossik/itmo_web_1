@@ -2,7 +2,7 @@ package webserver;
 
 public class Validator {
 
-    public static boolean validateX(int x) {
+    public static boolean validateX(float x) {
         return x >= -3 && x <= 5;
     }
 

@@ -14,21 +14,22 @@ header {
     color: white;
     padding: 20px 0;
     text-align: center;
-    font-family: monospace; 
+    font-family: monospace;
     font-size: 24px;
 }
 
 #student-info {
-    font-size: 18px; 
+    font-size: 18px;
     color: white;
 }
 
 main {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     padding: 20px;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1600px; /* Увеличим максимальную ширину для лучшего отображения */
     margin: 20px auto;
 }
 
@@ -36,24 +37,22 @@ main {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    width: 40%;
+    width: 30%; /* Уменьшаем ширину левой панели */
+    margin-right: 20px;
 }
 
 #right-panel {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 60%;
-    position: fixed;
-    top: 150px;     
-    right: 10px; 
+    width: 70%; /* Увеличиваем ширину правой панели */
+    margin-left: 20px;
 }
 
 form {
     background-color: white;
     border-radius: 8px;
     padding: 20px;
-    margin-top: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
 }
@@ -69,7 +68,7 @@ label {
 }
 
 input[type="number"], select {
-    width: 95%; 
+    width: 95%;
     padding: 5%;
     margin-bottom: 10px;
     border: 1px solid #ccc;
@@ -85,7 +84,7 @@ input[type="number"], select {
 .checkbox-group label {
     display: flex;
     margin: 2px 0;
-    padding-left: 15px; 
+    padding-left: 12px;
     position: relative;
 }
 
@@ -116,10 +115,11 @@ input[type="number"]:focus {
 }
 
 canvas {
-    margin-top: 30px;
     max-width: 100%;
     height: auto;
-    border: 1px solid #ddd;
+    display: block;
+    margin: 0 auto;
+    width: 90%;
 }
 
 #resultTable {
@@ -128,13 +128,21 @@ canvas {
     border-collapse: collapse;
     background-color: #ffffff;
     text-align: left;
-    border-radius: 8px;
+    border-radius: 8px; /* Закруглим углы таблицы */
     overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 #resultTable th, #resultTable td {
     padding: 10px;
     border: 1px solid #ddd;
+}
+
+#resultTable th {
+    background-color: #1b2a3d;
+    color: white;
+    text-align: center;
+}
+
+#resultTable td {
     text-align: center;
 }

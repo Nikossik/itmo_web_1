@@ -1,3 +1,5 @@
+let points = JSON.parse(localStorage.getItem('points')) || [];
+
 document.querySelectorAll("input[name='y']").forEach(checkbox => {
     checkbox.addEventListener('change', function () {
         document.querySelectorAll("input[name='y']").forEach(cb => {
@@ -6,19 +8,22 @@ document.querySelectorAll("input[name='y']").forEach(checkbox => {
     });
 });
 
+
 document.getElementById('pointForm').addEventListener('submit', function (event) {
     event.preventDefault();
-
-    const x = document.getElementById('x').value;
-    const yElements = document.querySelectorAll('input[name="y"]:checked'); 
+    
+    let x = document.getElementById('x').value.replace(',', '.');  
+    const yElements = document.querySelectorAll('input[name="y"]:checked');
     const r = document.getElementById('r').value;
 
+    
     if (!/^-?\d+(\.\d+)?$/.test(x) || x < -3 || x > 5) {
         alert("Please enter a valid X coordinate between -3 and 5.");
         console.warn("Invalid X value:", x);
         return;
     }
 
+    
     if (yElements.length === 0) {
         alert("Please select a Y value.");
         console.warn("No Y value selected.");
@@ -34,6 +39,7 @@ document.getElementById('pointForm').addEventListener('submit', function (event)
     
     const data = `x=${encodeURIComponent(x)}&y=${encodeURIComponent(y[0])}&r=${encodeURIComponent(r)}`;
 
+   
     fetch('/fcgi-bin/server.jar', {
         method: 'POST',
         headers: {
@@ -54,16 +60,41 @@ document.getElementById('pointForm').addEventListener('submit', function (event)
             <td>${result.currentTime !== undefined ? result.currentTime : 'undefined'}</td>
             <td>${result.executionTime !== undefined ? result.executionTime : 'undefined'}</td>
         `;
-
         resultBody.appendChild(newRow);
 
-        drawPoints(x, y[0], r); // Отображение точки на графике
+        
+        points.push({ x: parseFloat(x), y: parseFloat(y[0]), r: parseFloat(r), result: result.result });
+        localStorage.setItem('points', JSON.stringify(points));
 
+        drawGraph(); 
+        drawAllPoints(); 
     })
     .catch(error => console.error('Error:', error));
 });
 
-document.getElementById("r").addEventListener("change", drawGraph);
+document.getElementById("r").addEventListener("change", function() {
+    // recalculatePointsForNewR();  
+    drawGraph();
+    drawAllPoints(); 
+});
+
+window.addEventListener('load', function() {
+    localStorage.removeItem('points');  
+    points = [];  
+    drawGraph();  
+});
+
+function recalculatePointsForNewR() {
+    const currentR = document.getElementById("r").value;
+    
+    points.forEach(point => {
+        point.x = (point.x / point.r) * currentR; 
+        point.y = (point.y / point.r) * currentR;  
+        point.r = currentR;  
+    });
+
+    localStorage.setItem('points', JSON.stringify(points));  
+}
 
 function drawGraph() {
     const r = document.getElementById("r").value;
@@ -72,11 +103,11 @@ function drawGraph() {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Background
+    // Фон
     context.fillStyle = "#f0f0f0";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Axis
+    // Оси
     context.strokeStyle = "black";
     context.beginPath();
     context.moveTo(canvas.width / 2, 0);
@@ -85,8 +116,7 @@ function drawGraph() {
     context.lineTo(canvas.width, canvas.height / 2);
     context.stroke();
 
-
-    const scale = 80; 
+    const scale = 150;  
 
     context.fillStyle = "black";
     context.font = "12px Arial";
@@ -96,52 +126,59 @@ function drawGraph() {
     const halfScale = scale / 2;
     const offset = canvas.width / 2;
 
-    // X
-    context.fillText("-R", offset - scale, offset + 10);
-    context.fillText("-R/2", offset - halfScale, offset + 10);
-    context.fillText("R/2", offset + halfScale, offset + 10);
-    context.fillText("R", offset + scale, offset + 10);
+    // Разметка по X
+    context.fillText(`-${r}`, offset - scale, offset + 10);
+    context.fillText(`-${r}/2`, offset - halfScale, offset + 10);
+    context.fillText(`${r}/2`, offset + halfScale, offset + 10);
+    context.fillText(`${r}`, offset + scale, offset + 10);
     context.fillText("x", canvas.width - 10, offset - 10);
 
-    // Y
-    context.fillText("-R", offset - 15, offset + scale);
-    context.fillText("-R/2", offset - 15, offset + halfScale);
-    context.fillText("R/2", offset - 15, offset - halfScale);
-    context.fillText("R", offset - 15, offset - scale);
+    // Разметка по Y
+    context.fillText(`-${r}`, offset - 15, offset + scale);
+    context.fillText(`-${r}/2`, offset - 15, offset + halfScale);
+    context.fillText(`${r}/2`, offset - 15, offset - halfScale);
+    context.fillText(`${r}`, offset - 15, offset - scale);
     context.fillText("y", offset + 10, 10);
 
     context.fillStyle = "blue";
     context.globalAlpha = 0.5;
 
-    // Rectangle
+    // Прямоугольник
     context.fillRect(offset - scale, offset - scale, scale, scale);
 
-    // Circle
+    // Четверть окружности
     context.beginPath();
     context.moveTo(offset, offset);
     context.arc(offset, offset, halfScale, 1.5 * Math.PI, 2 * Math.PI, false);
     context.fill();
 
-    // Triangle
+    // Треугольник
     context.beginPath();
     context.moveTo(offset, offset);
     context.lineTo(offset + scale, offset);
     context.lineTo(offset, offset + scale);
     context.fill();
 
-    
     context.globalAlpha = 1.0;
 }
 
-function drawPoints(x, y, r) {
+function drawAllPoints() {
+    const r = document.getElementById("r").value;
+    points.forEach(point => {
+        drawPoints(point.x, point.y, point.r, r);
+    });
+}
+
+function drawPoints(x, y, pointR, currentR) {
     const canvas = document.getElementById("graphCanvas");
     const context = canvas.getContext("2d");
-    const scale = 80;
+    const scale = 150; 
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const pointX = centerX + x * scale;
-    const pointY = centerY - y * scale;
+
+    const pointX = centerX + (x / currentR) * scale;
+    const pointY = centerY - (y / currentR) * scale;
 
     context.fillStyle = "red";
     context.beginPath();
@@ -150,3 +187,4 @@ function drawPoints(x, y, r) {
 }
 
 drawGraph();
+drawAllPoints();

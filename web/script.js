@@ -73,7 +73,6 @@ document.getElementById('pointForm').addEventListener('submit', function (event)
 });
 
 document.getElementById("r").addEventListener("change", function() {
-    // recalculatePointsForNewR();  
     drawGraph();
     drawAllPoints(); 
 });
@@ -84,18 +83,6 @@ window.addEventListener('load', function() {
     drawGraph();  
 });
 
-function recalculatePointsForNewR() {
-    const currentR = document.getElementById("r").value;
-    
-    points.forEach(point => {
-        point.x = (point.x / point.r) * currentR; 
-        point.y = (point.y / point.r) * currentR;  
-        point.r = currentR;  
-    });
-
-    localStorage.setItem('points', JSON.stringify(points));  
-}
-
 function drawGraph() {
     const r = document.getElementById("r").value;
     const canvas = document.getElementById("graphCanvas");
@@ -103,11 +90,11 @@ function drawGraph() {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Фон
+    // back
     context.fillStyle = "#f0f0f0";
     context.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Оси
+    // xy
     context.strokeStyle = "black";
     context.beginPath();
     context.moveTo(canvas.width / 2, 0);
@@ -126,14 +113,14 @@ function drawGraph() {
     const halfScale = scale / 2;
     const offset = canvas.width / 2;
 
-    // Разметка по X
+    // x
     context.fillText(`-${r}`, offset - scale, offset + 10);
     context.fillText(`-${r}/2`, offset - halfScale, offset + 10);
     context.fillText(`${r}/2`, offset + halfScale, offset + 10);
     context.fillText(`${r}`, offset + scale, offset + 10);
     context.fillText("x", canvas.width - 10, offset - 10);
 
-    // Разметка по Y
+    // y
     context.fillText(`-${r}`, offset - 15, offset + scale);
     context.fillText(`-${r}/2`, offset - 15, offset + halfScale);
     context.fillText(`${r}/2`, offset - 15, offset - halfScale);
@@ -143,16 +130,16 @@ function drawGraph() {
     context.fillStyle = "blue";
     context.globalAlpha = 0.5;
 
-    // Прямоугольник
+    // Прямоуг
     context.fillRect(offset - scale, offset - scale, scale, scale);
 
-    // Четверть окружности
+    // круг
     context.beginPath();
     context.moveTo(offset, offset);
     context.arc(offset, offset, halfScale, 1.5 * Math.PI, 2 * Math.PI, false);
     context.fill();
 
-    // Треугольник
+    // Треуг
     context.beginPath();
     context.moveTo(offset, offset);
     context.lineTo(offset + scale, offset);

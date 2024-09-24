@@ -29,24 +29,18 @@ main {
     justify-content: space-between;
     padding: 20px;
     width: 100%;
-    max-width: 1600px; /* Увеличим максимальную ширину для лучшего отображения */
+    max-width: 1600px; 
     margin: 20px auto;
 }
 
 #left-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 30%; /* Уменьшаем ширину левой панели */
-    margin-right: 20px;
+    width: 40%;
+    float: left;
 }
 
 #right-panel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 70%; /* Увеличиваем ширину правой панели */
-    margin-left: 20px;
+    width: 50%;
+    float: right;
 }
 
 form {
@@ -114,12 +108,12 @@ input[type="number"]:focus {
     border-color: #1b2a3d;
 }
 
-canvas {
-    max-width: 100%;
-    height: auto;
+#graphCanvas {
+    width: 600px; 
+    height: 600px; 
     display: block;
     margin: 0 auto;
-    width: 90%;
+    position: relative;
 }
 
 #resultTable {
@@ -128,7 +122,7 @@ canvas {
     border-collapse: collapse;
     background-color: #ffffff;
     text-align: left;
-    border-radius: 8px; /* Закруглим углы таблицы */
+    border-radius: 8px; 
     overflow: hidden;
 }
 
